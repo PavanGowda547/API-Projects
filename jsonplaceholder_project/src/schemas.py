@@ -13,7 +13,7 @@ class AddressSchema(BaseModel):
 
 class ComapnySchema(BaseModel):
     name: str
-    catchPharse: str
+    catchPhrase: str
     bs: str
 
 class UserSchema(BaseModel):

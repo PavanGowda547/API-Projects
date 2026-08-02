@@ -9,8 +9,10 @@ from src.schemas import CommentSchema, PostSchema, UserSchema
 
 logger = logging.getLogger(__name__)
 
+
 class ExtractError(Exception):
-    pass
+    """Raised when the extract stage cannot produce valid data."""
+
 
 @retry(
     stop=stop_after_attempt(3),
@@ -18,11 +20,12 @@ class ExtractError(Exception):
     reraise=True,
 )
 def _get(endpoint: str) -> list[dict]:
-    url=f"{settings.jsonplaceholder_base_url}/{endpoint}"
-    logger.info("Requesting %s",url)
+    url = f"{settings.jsonplaceholder_base_url}/{endpoint}"
+    logger.info("Requesting %s", url)
     response = requests.get(url, timeout=10)
     response.raise_for_status()
     return response.json()
+
 
 def extract_users() -> list[UserSchema]:
     raw = _get("users")
@@ -30,23 +33,25 @@ def extract_users() -> list[UserSchema]:
         users = [UserSchema.model_validate(u) for u in raw]
     except ValidationError as exc:
         raise ExtractError(f"User payload failed validation: {exc}") from exc
-    logger.info("Extracted %d users ", len(users))
+    logger.info("Extracted %d users", len(users))
     return users
+
 
 def extract_posts() -> list[PostSchema]:
     raw = _get("posts")
     try:
-        posts = [PostSchema.model_validate(u) for u in raw]
+        posts = [PostSchema.model_validate(p) for p in raw]
     except ValidationError as exc:
         raise ExtractError(f"Post payload failed validation: {exc}") from exc
-    logger.info("Extracted %d posts ", len(posts))
+    logger.info("Extracted %d posts", len(posts))
     return posts
+
 
 def extract_comments() -> list[CommentSchema]:
     raw = _get("comments")
     try:
-        comments = [CommentSchema.model_validate(u) for u in raw]
+        comments = [CommentSchema.model_validate(c) for c in raw]
     except ValidationError as exc:
-        raise ExtractError(f"Comments payload failed validation: {exc}") from exc
-    logger.info("Extracted %d comments ", len(comments))
-    return comments    
+        raise ExtractError(f"Comment payload failed validation: {exc}") from exc
+    logger.info("Extracted %d comments", len(comments))
+    return comments

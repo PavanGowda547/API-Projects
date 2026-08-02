@@ -15,7 +15,7 @@ def transform_user(user: UserSchema) -> dict:
         "phone": _clean_str(user.phone),
         "website": _clean_str(user.website),
         "company_name": _clean_str(user.company.name),
-        "company_catch_phrase": _clean_str(user.company.catchPharse),
+        "company_catch_phrase": _clean_str(user.company.catchPhrase),
         "company_bs": _clean_str(user.company.bs) 
     }
 
