@@ -1,0 +1,35 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:-admin123}
+      POSTGRES_DB: jsonplaceholder_etl
+      ETL_APP_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/
+      - ./sql/docker-init-role.sh:/docker-entrypoint-initdb.d/01-create-role.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d jsonplaceholder_etl"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        codnition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DB_HOST: postgres
+      RUN_MODE: ${RUN_MODE:-once}
+      PIPELINE_INTERVAL_SECONDS: ${PIPELINE_INTERVAL_SECONDS:-3600}
+
+volumes:
+  pgdata:
