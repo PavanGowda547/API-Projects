@@ -1,0 +1,21 @@
+#!/bin/bash
+
+set -e
+
+: "${ETL_APP_PASSWORD:?ETL_APP_PASSWORD must be set (from .env DB_PASSWORD)}"
+
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+CREATE ROLE etl_app  WITH LOGIN PASSWORD '${ETL_APP_PASSWORD}';
+
+GRANT USAGE ON SCHEMA public TO etl_app;
+GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public to etl_app;
+
+ALTER DEFAULT PRIVILIGES IN SCHEMA public
+GARNT SELECT, INSERT, UPDATE, ON TABLES TO etl_app;
+
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public to etl_app;
+ALTER DEFAULT PRIVILIGES IN SCHEMA public
+GRANT USAGE, SELECT ON SEQUENCES TO etl_app;
+EOSQL
+
+echo "[init-role] etl_app created with least-privillege grants"
